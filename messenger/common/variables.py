@@ -8,6 +8,9 @@ MAX_PACKAGE_LENGTH = 1024
 ENCODING = 'utf-8'
 LOGGING_LEVEL = logging.DEBUG
 
+# DB
+SERVER_DATABASE = 'sqlite:///server_base.db3'
+
 # JIM
 ACTION = 'action'
 TIME = 'time'

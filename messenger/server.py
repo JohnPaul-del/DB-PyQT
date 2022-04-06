@@ -1,21 +1,24 @@
 import socket
 import argparse
 import select
+import threading
 
 from common.utils import *
 from decos import log
 from metaclass import ServerMaker
 from main_descriptors import Port
+from server_db import ServerStorage
 
 logger = logging.getLogger('server')
 
 
-class Server(metaclass=ServerMaker):
+class Server(threading.Thread, metaclass=ServerMaker):
     port = Port()
 
-    def __init__(self, listen_address, listen_port):
+    def __init__(self, listen_address, listen_port, database):
         self.address = listen_address
         self.port = listen_port
+        self.database = database
 
         self.clients = []
         self.messages = []
@@ -117,11 +120,44 @@ def args_parser():
     return listen_address, listen_port
 
 
+def user_help():
+    print(f'Available commands:'
+          f'users - All users list'
+          f'connected - Active users list'
+          f'log - Login history'
+          f'exit = Shutdown server'
+          f'help - Help for available commands')
+
+
 def main():
     listen_address, listen_port = args_parser()
 
-    server = Server(listen_address, listen_port)
+    database = ServerStorage()
+
+    server = Server(listen_address, listen_port, database)
+    server.daemon = True
     server.main_loop()
+
+    user_help()
+
+    while True:
+        command = input('Enter command: ')
+        if command == 'help':
+            user_help()
+        elif command == 'exit':
+            break
+        elif command == 'users':
+            for user in sorted(database.users_list()):
+                print(f'User {user[0]}. Last login {user[1]}')
+        elif command == 'connected':
+            for user in sorted(database.active_users_list()):
+                print(f'User {user[0]} connected at {user[3]}')
+        elif command == 'log':
+            username = input('Enter username or press Enter for print all history')
+            for user in sorted(database.login_history(username)):
+                print(f'User {user[0]}({user[2]}:{user[3]}) connected at {user[1]}')
+        else:
+            print(f'Invalid command')
 
 
 if __name__ == '__main__':
