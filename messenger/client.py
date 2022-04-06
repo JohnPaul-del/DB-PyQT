@@ -1,13 +1,9 @@
-import sys
-import json
 import socket
 import time
 import argparse
-import logging
 import threading
+from metaclass import ClientMaker
 
-import logs.client_log_cnf
-from common.variables import *
 from common.utils import *
 from errors import IncorrectDataRecievedError, ReqFieldMissingError, ServerError
 from decos import log
@@ -15,114 +11,84 @@ from decos import log
 logger = logging.getLogger('client')
 
 
-def main():
-    print('Start consol client')
-    server_address, server_port, client_name = arg_parser()
+class ClientSender(threading.Thread, metaclass=ClientMaker):
+    def __init__(self, account_name, sock):
+        self.account_name = account_name
+        self.socket = sock
+        super().__init__()
 
-    if not client_name:
-        print('Enter username!')
+    def exit_message(self):
+        return {
+            ACTION: EXIT,
+            TIME: time.time(),
+            ACCOUNT_NAME: self.account_name,
+        }
 
-    logger.info(f'Client has been started. Server: {server_address}. Port: {server_port}. User: {client_name}')
-
-    try:
-        transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        transport.connect((server_address, server_port))
-        send_message(transport, create_presence(client_name))
-        answer = proccess_response_answer(get_message(transport))
-        logger.info(f'Connection established. {answer}')
-    except json.JSONDecodeError:
-        logger.error(f'Could not decode JSON')
-        exit(1)
-    except ServerError as error:
-        logger.error(f'Connection failed. Server return {error.text}')
-        exit(1)
-    except ReqFieldMissingError as missing_error:
-        logger.error(f'Not enough arguments {missing_error.missing_field}')
-        exit(1)
-    except (ConnectionError, ConnectionRefusedError):
-        logger.critical(f'Connection failed. {server_address}:{server_port} unreachable')
-        exit(1)
-    else:
-        receiver = threading.Thread(target=get_message_from_server, args=(transport, client_name))
-        receiver.daemon = True
-        receiver.start()
-
-        user_interface = threading.Thread(target=interactive, args=(transport, client_name))
-        user_interface.daemon = True
-        user_interface.start()
-        logger.debug('Successfully started')
-
-        while True:
-            time.sleep(1)
-            if receiver.is_alive() and user_interface.is_alive():
-                continue
-            break
-
-
-@log
-def exit_message(account):
-    return {
-        ACTION: EXIT,
-        TIME: time.time(),
-        ACCOUNT_NAME: account,
-    }
-
-
-@log
-def get_message_from_server(sock, username):
-    while True:
+    def create_message(self):
+        message_to = input('Enter username: ')
+        message_text = input('Enter text: ')
+        message_dict = {
+            ACTION: MESSAGE,
+            SENDER: self.account_name,
+            DESTINATION: message_to,
+            TIME: time.time(),
+            MESSAGE_TEXT: message_text
+        }
+        logger.debug(f'Message dict created: {message_dict}')
         try:
-            message = get_message(sock)
-            if ACTION in message and message[ACTION] == MESSAGE \
-                    and SENDER in message and DESTINATION in message \
-                    and MESSAGE_TEXT in message and message[DESTINATION] == username:
-                print(f'Message from user: {message[SENDER]},\n{message[MESSAGE_TEXT]}')
+            send_message(self.socket, message_dict)
+            logger.info(f'Message sent: {message_to}')
+        except (OSError, ConnectionError, ConnectionAbortedError, ConnectionRefusedError):
+            logger.critical('Connection lost')
+            exit(1)
+
+    def interactive(self):
+        self.user_help()
+        while True:
+            command = input('Enter command: ')
+            if command == 'message':
+                self.create_message()
+            elif command == 'help':
+                self.user_help()
+            elif command == 'quit':
+                try:
+                    send_message(self.socket, self.exit_message())
+                except Exception:
+                    pass
+                logger.info('Sessions closed by user')
+                time.sleep(0.5)
+                break
             else:
-                logger.error(f'Incorrect data received from server: {message}')
-        except IncorrectDataRecievedError:
-            logger.error('Encoding error')
-        except (OSError, ConnectionError, ConnectionAbortedError, ConnectionRefusedError, json.JSONDecodeError):
-            logger.critical('Connection lost!')
-            break
+                print('Command not available. Enter "help" to see all commands')
+
+    def user_help(self):
+        print(f'Commands:\n'
+              f'1. message - create and send a message\n'
+              f'2. help - Command list\n'
+              f'3. quit - Close the connection and exit')
 
 
-@log
-def create_message(sock, account_name='guest'):
-    message_to = input('Enter username: ')
-    message_text = input('Enter text: ')
-    message_dict = {
-        ACTION: MESSAGE,
-        SENDER: account_name,
-        DESTINATION: message_to,
-        TIME: time.time(),
-        MESSAGE_TEXT: message_text
-    }
-    logger.debug(f'Message dict created: {message_dict}')
-    try:
-        send_message(sock, message_dict)
-        logger.info(f'Message sent: {message_to}')
-    except (OSError, ConnectionError, ConnectionAbortedError, ConnectionRefusedError):
-        logger.critical('Connection lost')
-        exit(1)
+class ClientReader(threading.Thread, metaclass=ClientMaker):
+    def __init__(self, account_name, sock):
+        self.socket = sock
+        self.account_name = account_name
+        super().__init__()
 
-
-@log
-def interactive(sock, username):
-    user_help()
-    while True:
-        command = input('Enter command: ')
-        if command == 'message':
-            create_message(sock, username)
-        elif command == 'help':
-            user_help()
-        elif command == 'quit':
-            send_message(sock, exit_message(username))
-            print('Connection closed')
-            logger.info('Sessions closed by user')
-            time.sleep(0.5)
-            break
-        else:
-            print('Command not available. Enter "help" to see all commands')
+    def get_message_from_server(self):
+        while True:
+            try:
+                message = get_message(self.socket)
+                if ACTION in message and message[ACTION] == MESSAGE \
+                        and SENDER in message and DESTINATION in message \
+                        and MESSAGE_TEXT in message and message[DESTINATION] == self.account_name:
+                    print(f'Message from user: {message[SENDER]},\n{message[MESSAGE_TEXT]}')
+                else:
+                    logger.error(f'Incorrect data received from server: {message}')
+            except IncorrectDataRecievedError:
+                logger.error('Encoding error')
+            except (OSError, ConnectionError, ConnectionAbortedError, ConnectionRefusedError, json.JSONDecodeError):
+                logger.critical('Connection lost!')
+                break
 
 
 @log
@@ -139,7 +105,7 @@ def create_presence(account_name):
 
 
 @log
-def proccess_response_answer(message):
+def process_response_answer(message):
     logger.debug(f'Message from server: {message}')
     if RESPONSE in message:
         if message.RESPONSE == 200:
@@ -167,11 +133,48 @@ def arg_parser():
     return server_address, server_port, client_name
 
 
-def user_help():
-    print(f'Commands:\n'
-          f'1. message - create and send a message\n'
-          f'2. help - Command list\n'
-          f'3. quit - Close the connection and exit')
+def main():
+    print('Start console client')
+    server_address, server_port, client_name = arg_parser()
+
+    if not client_name:
+        print('Enter username!')
+
+    logger.info(f'Client has been started. Server: {server_address}. Port: {server_port}. User: {client_name}')
+
+    try:
+        transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        transport.connect((server_address, server_port))
+        send_message(transport, create_presence(client_name))
+        answer = process_response_answer(get_message(transport))
+        logger.info(f'Connection established. {answer}')
+    except json.JSONDecodeError:
+        logger.error(f'Could not decode JSON')
+        exit(1)
+    except ServerError as error:
+        logger.error(f'Connection failed. Server return {error.text}')
+        exit(1)
+    except ReqFieldMissingError as missing_error:
+        logger.error(f'Not enough arguments {missing_error.missing_field}')
+        exit(1)
+    except (ConnectionError, ConnectionRefusedError):
+        logger.critical(f'Connection failed. {server_address}:{server_port} unreachable')
+        exit(1)
+    else:
+        receiver = ClientReader(client_name, transport)
+        receiver.daemon = True
+        receiver.start()
+
+        user_interface = ClientSender(client_name, transport)
+        user_interface.daemon = True
+        user_interface.start()
+        logger.debug('Successfully started')
+
+        while True:
+            time.sleep(1)
+            if receiver.is_alive() and user_interface.is_alive():
+                continue
+            break
 
 
 if __name__ == '__main__':

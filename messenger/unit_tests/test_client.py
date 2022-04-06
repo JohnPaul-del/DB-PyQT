@@ -2,7 +2,7 @@ import sys
 import unittest
 from time import time
 
-from ..client import create_presence, proccess_response_answer
+from ..client import create_presence, process_response_answer
 from ..common.variables import *
 from ..errors import ReqFieldMissingError, ServerError
 sys.path.append('../')
@@ -22,18 +22,18 @@ class TestClass(unittest.TestCase):
                          })
 
     def test_good_answer(self):
-        self.assertEqual(proccess_response_answer(
+        self.assertEqual(process_response_answer(
             {RESPONSE: 200, }), '200 : OK')
 
     def test_bad_answer(self):
         self.assertRaises(ServerError,
-                          proccess_response_answer,
+                          process_response_answer,
                           {RESPONSE: 400,
                            ERROR: 'Bad request', })
 
     def test_no_response(self):
         self.assertRaises(ReqFieldMissingError,
-                          proccess_response_answer,
+                          process_response_answer,
                           {ERROR: 'No response', })
 
 

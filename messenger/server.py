@@ -1,110 +1,109 @@
 import socket
 import argparse
-import sys
-import json
-import logging
 import select
-import time
 
-import logs.server_log_cnf
-from errors import IncorrectDataRecievedError
-from common.variables import *
 from common.utils import *
 from decos import log
+from metaclass import ServerMaker
+from main_descriptors import Port
 
 logger = logging.getLogger('server')
 
 
-def main():
-    listen_address, listen_port = args_parser()
+class Server(metaclass=ServerMaker):
+    port = Port()
 
-    logger.info(f'Server {listen_address}:{listen_port} is running')
+    def __init__(self, listen_address, listen_port):
+        self.address = listen_address
+        self.port = listen_port
 
-    transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    transport.bind((listen_address, listen_port))
-    transport.settimeout(0.5)
+        self.clients = []
+        self.messages = []
+        self.names = {}
 
-    clients = []
-    messages = []
-    names = {}
+    def init_socket(self):
+        logger.info(f'Server started. {self.address}:{self.port}')
 
-    transport.listen(MAX_CONNECTIONS)
-    while True:
-        try:
-            client, client_address = transport.accept()
-        except OSError:
-            pass
-        else:
-            logger.info(f'Connecting to {client_address}')
-            clients.append(client)
+        transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        transport.bind((self.address, self.port))
+        transport.settimeout(0.5)
 
-        recv_data_list = []
-        send_data_list = []
-        errors_list = []
-        try:
-            if clients:
-                recv_data_list, send_data_list, errors_list = select.select(clients, clients, [], 0)
-        except OSError:
-            pass
+        self.sock = transport
+        self.sock.listen()
 
-        if recv_data_list:
-            for message_client in recv_data_list:
-                try:
-                    process_client_message(get_message(message_client), messages, message_client, clients, names)
-                except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError):
-                    logger.info(f'Client {message_client.getpeername()} has been disconnected')
-                    clients.remove(message_client)
+    def main_loop(self):
+        self.init_socket()
 
-        for mes in messages:
+        while True:
             try:
-                process_message(mes, names, send_data_list)
-            except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError):
-                logger.info(f'Connection with {mes[DESTINATION]} has been failed')
-                clients.remove(names[mes[DESTINATION]])
-                del names[mes[DESTINATION]]
-        messages.clear()
+                client, client_address = self.sock.accept()
+            except OSError:
+                pass
+            else:
+                logger.info(f'Connection established with client {client_address}')
+                self.clients.append(client)
+            recv_data_list = []
+            send_data_list = []
+            try:
+                if self.clients:
+                    recv_data_list, send_data_list, errors_list = select.select(self.clients, self.clients, [], 0)
+            except OSError:
+                pass
 
+            if recv_data_list:
+                for message_client in recv_data_list:
+                    try:
+                        self.process_client_message(get_message(message_client), message_client)
+                    except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError):
+                        logger.info(f'Client {message_client.getpeername()} has been disconnected')
+                        self.clients.remove(message_client)
 
-@log
-def process_client_message(message, messages_list, client, clients, names):
-    logger.debug(f'Message from client {message}')
+            for mes in self.messages:
+                try:
+                    self.process_message(mes, send_data_list)
+                except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError):
+                    logger.info(f'Connection with {mes[DESTINATION]} has been failed')
+                    self.clients.remove(self.names[mes[DESTINATION]])
+                    del self.names[mes[DESTINATION]]
+            self.messages.clear()
 
-    if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
-        if message[USER][ACCOUNT_NAME] not in names.keys():
-            names[message[USER][ACCOUNT_NAME]] = client
-            send_message(client, RESPONSE_200)
+    def process_message(self, message, listen_socks):
+        if message[DESTINATION] in self.names and self.names[message[DESTINATION]] in listen_socks:
+            send_message(self.names[message[DESTINATION]], message)
+            logger.info(f'Message has been sent to {message[DESTINATION]} from {message[SENDER]}')
+        elif message[DESTINATION] in self.names and self.names[message[DESTINATION]] not in listen_socks:
+            raise ConnectionError
+        else:
+            logger.error(f'User {message[DESTINATION]} is not authorized')
+
+    def process_client_message(self, message, client):
+        logger.debug(f'Message from client {message}')
+
+        if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
+            if message[USER][ACCOUNT_NAME] not in self.names.keys():
+                self.names[message[USER][ACCOUNT_NAME]] = client
+                send_message(client, RESPONSE_200)
+            else:
+                response = RESPONSE_400
+                response[ERROR] = 'Username already in use'
+                send_message(client, response)
+                self.clients.remove(client)
+                client.close()
+            return
+        elif ACTION in message and message[ACTION] == MESSAGE \
+                and DESTINATION in message and TIME in message \
+                and SENDER in message and MESSAGE_TEXT in message:
+            self.messages.append(message)
+            return
+        elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message:
+            self.clients.remove(self.names[ACCOUNT_NAME])
+            self.names[ACCOUNT_NAME].close()
+            del self.names[ACCOUNT_NAME]
+            return
         else:
             response = RESPONSE_400
-            response[ERROR] = 'Username already in use'
+            response[ERROR] = 'Invalid request'
             send_message(client, response)
-            clients.remove(client)
-            client.close()
-        return
-    elif ACTION in message and message[ACTION] == MESSAGE \
-            and DESTINATION in message and TIME in message \
-            and SENDER in message and MESSAGE_TEXT in message:
-        messages_list.append(message)
-        return
-    elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message:
-        clients.remove(names[ACCOUNT_NAME])
-        names[ACCOUNT_NAME].close()
-        del names[ACCOUNT_NAME]
-        return
-    else:
-        response = RESPONSE_400
-        response[ERROR] = 'Invalid request'
-        send_message(client, response)
-
-
-@log
-def process_message(message, names, listen_socks):
-    if message[DESTINATION] in names and names[message[DESTINATION]] in listen_socks:
-        send_message(names[message[DESTINATION]], message)
-        logger.info(f'Message has been sent to {message[DESTINATION]} from {message[SENDER]}')
-    elif message[DESTINATION] in names and names[message[DESTINATION]] not in listen_socks:
-        raise ConnectionError
-    else:
-        logger.error(f'User {message[DESTINATION]} is not authorized')
 
 
 @log
@@ -115,11 +114,14 @@ def args_parser():
     names = parser.parse_args(sys.argv[1:])
     listen_address = names.a
     listen_port = names.p
-
-    if not 1023 < listen_port < 65536:
-        logger.critical(f'Port {listen_port} out of range')
-        exit(1)
     return listen_address, listen_port
+
+
+def main():
+    listen_address, listen_port = args_parser()
+
+    server = Server(listen_address, listen_port)
+    server.main_loop()
 
 
 if __name__ == '__main__':
