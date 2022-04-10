@@ -1,16 +1,24 @@
-import socket
 import argparse
+import configparser
+import os.path
 import select
+import socket
 import threading
+
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from common.utils import *
 from decos import log
-from metaclass import ServerMaker
 from main_descriptors import Port
+from metaclass import ServerMaker
 from server_db import ServerStorage
+from server_gui import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
 
 logger = logging.getLogger('server')
 
+new_connection = False
+conflag_lock = threading.Lock()
 
 class Server(threading.Thread, metaclass=ServerMaker):
     port = Port()
@@ -23,6 +31,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
         self.clients = []
         self.messages = []
         self.names = {}
+
+        super().__init__()
 
     def init_socket(self):
         logger.info(f'Server started. {self.address}:{self.port}')
@@ -80,12 +90,21 @@ class Server(threading.Thread, metaclass=ServerMaker):
             logger.error(f'User {message[DESTINATION]} is not authorized')
 
     def process_client_message(self, message, client):
+        global new_connection
         logger.debug(f'Message from client {message}')
 
         if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
             if message[USER][ACCOUNT_NAME] not in self.names.keys():
                 self.names[message[USER][ACCOUNT_NAME]] = client
+                client_ip, client_port = client.getpeername()
+                self.database.user_login(
+                    message[USER][ACCOUNT_NAME],
+                    client_ip,
+                    client_port,
+                )
                 send_message(client, RESPONSE_200)
+                with conflag_lock:
+                    new_connection = True
             else:
                 response = RESPONSE_400
                 response[ERROR] = 'Username already in use'
@@ -95,14 +114,46 @@ class Server(threading.Thread, metaclass=ServerMaker):
             return
         elif ACTION in message and message[ACTION] == MESSAGE \
                 and DESTINATION in message and TIME in message \
-                and SENDER in message and MESSAGE_TEXT in message:
+                and SENDER in message and MESSAGE_TEXT in message\
+                and self.names[message[SENDER]] == client:
             self.messages.append(message)
+            self.database.process_message(message[SENDER],
+                                          message[DESTINATION],
+                                          )
             return
-        elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message:
-            self.clients.remove(self.names[ACCOUNT_NAME])
-            self.names[ACCOUNT_NAME].close()
-            del self.names[ACCOUNT_NAME]
+        elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message\
+                and self.names[message[ACCOUNT_NAME]] == client:
+            self.database.user_logout(message[ACCOUNT_NAME])
+            self.clients.remove(self.names[message[ACCOUNT_NAME]])
+            self.names[message[ACCOUNT_NAME]].close()
+            del self.names[message[ACCOUNT_NAME]]
+            with conflag_lock:
+                new_connection = True
             return
+        elif ACTION in message and message[ACTION] == GET_CONTACTS \
+            and USER in message and self.names[message[USER]] == client:
+            response = RESPONSE_202
+            response[LIST_INFO] = self.database.get_contacts(message[USER])
+            send_message(client, response)
+        elif ACTION in message and message[ACTION] == ADD_CONTACT \
+            and ACCOUNT_NAME in message and USER in message \
+            and self.names[message[USER]] == client:
+            self.database.add_contact(message[USER],
+                                      message[ACCOUNT_NAME],
+                                      )
+            send_message(client, RESPONSE_200)
+        elif ACTION in message and message[ACTION] == REMOVE_CONTACT \
+            and ACCOUNT_NAME in message and USER in message \
+            and self.names[message[USER]] == client:
+            self.database.remove_contact(message[USER],
+                                         message[ACCOUNT_NAME],
+                                         )
+            send_message(client, RESPONSE_200)
+        elif ACTION in message and message[ACTION] == USERS_REQUEST \
+            and ACCOUNT_NAME in message and self.names[message[ACCOUNT_NAME]] == client:
+            response = RESPONSE_202
+            response[LIST_INFO] = [user[0] for user in self.database.users_list()]
+            send_message(client, response)
         else:
             response = RESPONSE_400
             response[ERROR] = 'Invalid request'
@@ -110,54 +161,103 @@ class Server(threading.Thread, metaclass=ServerMaker):
 
 
 @log
-def args_parser():
+def args_parser(default_port, default_address):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', default=DEFAULT_PORT, type=int, nargs='?')
-    parser.add_argument('-a', default='', nargs='?')
+    parser.add_argument('-p', default=default_port, type=int, nargs='?')
+    parser.add_argument('-a', default=default_address, nargs='?')
     names = parser.parse_args(sys.argv[1:])
     listen_address = names.a
     listen_port = names.p
     return listen_address, listen_port
 
 
-def user_help():
-    print(f'Available commands:'
-          f'users - All users list'
-          f'connected - Active users list'
-          f'log - Login history'
-          f'exit = Shutdown server'
-          f'help - Help for available commands')
-
-
 def main():
-    listen_address, listen_port = args_parser()
+    config = configparser.ConfigParser()
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config.read(f"{dir_path}/{'server.ini'}")
 
-    database = ServerStorage()
+
+    listen_address, listen_port = args_parser(
+        config['SETTINGS']['Default_port'],
+        config['SETTINGS']['Listen_address'],
+    )
+
+    database = ServerStorage(
+        os.path.join(
+            config['SETTINGS']['Database_path'],
+            config['SETTINGS']['Database_file'],
+        ))
 
     server = Server(listen_address, listen_port, database)
     server.daemon = True
-    server.main_loop()
+    server.start()
 
-    user_help()
+    server_app = QApplication(sys.argv)
+    main_window = MainWindow()
 
-    while True:
-        command = input('Enter command: ')
-        if command == 'help':
-            user_help()
-        elif command == 'exit':
-            break
-        elif command == 'users':
-            for user in sorted(database.users_list()):
-                print(f'User {user[0]}. Last login {user[1]}')
-        elif command == 'connected':
-            for user in sorted(database.active_users_list()):
-                print(f'User {user[0]} connected at {user[3]}')
-        elif command == 'log':
-            username = input('Enter username or press Enter for print all history')
-            for user in sorted(database.login_history(username)):
-                print(f'User {user[0]}({user[2]}:{user[3]}) connected at {user[1]}')
+    main_window.statusBar().showMessage('Server running')
+    main_window.active_clients_table.setModel(gui_create_model(database))
+    main_window.active_clients_table.resizeColumnsToContents()
+    main_window.active_clients_table.resizeRowsToContents()
+
+    def list_update():
+        global new_connection
+        if new_connection:
+            main_window.active_clients_table.setModel(gui_create_model(database))
+            main_window.active_clients_table.resizeColumnsToContents()
+            main_window.active_clients_table.resizeRowsToContents()
+            with conflag_lock:
+                new_connection = False
+
+    def show_statistics():
+        global stat_window
+        stat_window = HistoryWindow()
+        stat_window.history_table.setModel(create_stat_model(database))
+        stat_window.history_table.resizeColumnsToContents()
+        stat_window.history_table.resizeRowsToContents()
+        stat_window.show()
+
+    def server_config():
+        global config_window
+        config_window = ConfigWindow()
+        config_window.db_path.insert(config['SETTINGS']['Database_path'])
+        config_window.db_file.insert(config['SETTINGS']['Database_file'])
+        config_window.port.insert(config['SETTINGS']['Default_port'])
+        config_window.ip.insert(config['SETTINGS']['Listen_Address'])
+        config_window.save_btn.clicked.connect(save_server_config)
+
+    def save_server_config():
+        global config_window
+        message = QMessageBox()
+        config['SETTINGS']['Database_path'] = config_window.db_path.text()
+        config['SETTINGS']['Database_file'] = config_window.db_file.text()
+        try:
+            port = int(config_window.port.text())
+        except ValueError:
+            message.warning(config_window, 'Error', 'Port must be an integer')
         else:
-            print(f'Invalid command')
+            config['SETTINGS']['Listen_Address'] = config_window.ip.text()
+            if 1023 < port < 65536:
+                config['SETTINGS']['Default_port'] = str(port)
+                print(port)
+                with open('server.ini', 'w') as conf:
+                    config.write(conf)
+                    message.information(
+                        config_window, 'OK', 'Config has been successfully saved')
+            else:
+                message.warning(config_window,
+                                'Error',
+                                'Port must be from 1024 to 65546',
+                                )
+    timer = QTimer()
+    timer.timeout.connect(list_update)
+    timer.start(1000)
+
+    main_window.refresh_button.triggered.connect(list_update)
+    main_window.show_history_button.triggered.connect(show_statistics)
+    main_window.config_btn.triggered.connect(server_config)
+
+    server_app.exec_()
 
 
 if __name__ == '__main__':

@@ -1,10 +1,16 @@
 import logging
+import  sys
 
 logger = logging.getLogger('server')
 
+if sys.argv[0].find('client') == -1:
+    logger = logging.getLogger('server')
+else:
+    logger = logging.getLogger('client')
+
 
 class Port:
-    def __init__(self, instance, value):
+    def __set__(self, instance, value):
         if not 1023 < value < 65536:
             logger.critical(f'Invalid port value: {value}.'
                             f'must be between 1023 and 65535')

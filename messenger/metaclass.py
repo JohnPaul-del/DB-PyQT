@@ -19,9 +19,12 @@ class ServerMaker(type):
                         if el.argval not in attributes:
                             attributes.append(el.argval)
 
-            if 'connect' in methods:
-                raise TypeError('Server does not support connect method')
-            super().__init__(class_name, bases, class_dict)
+        if 'connect' in methods:
+            raise TypeError('Server does not support connect method')
+
+        if not ('SOCK_STREAM' in attributes and 'AF_INET' in attributes):
+            raise TypeError('Некорректная инициализация сокета.')
+        super().__init__(class_name, bases, class_dict)
 
 
 class ClientMaker(type):

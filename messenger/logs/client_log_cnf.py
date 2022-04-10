@@ -3,7 +3,7 @@ import os
 sys.path.append('..')
 
 import logging
-from ..common.variables import LOGGING_LEVEL
+from messenger.common.variables import LOGGING_LEVEL
 
 client_format = logging.Formatter('%(asctime)s %(levelname)s %(filename)s %(message)s')
 

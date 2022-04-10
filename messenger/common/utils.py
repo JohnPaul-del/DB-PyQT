@@ -1,10 +1,10 @@
 import json
 import sys
-sys.path.append('../')
+sys.path.append("..")
 
-from variables import *
-from ..errors import IncorrectDataRecievedError, NonDictInpuErrorError
-from decos import log
+from .variables import *
+from messenger.errors import IncorrectDataRecievedError, NonDictInpuErrorError
+from messenger.decos import log
 
 
 @log
@@ -18,7 +18,7 @@ def get_message(client):
         else:
             raise IncorrectDataRecievedError
     else:
-        raise: IncorrectDataRecievedError
+        raise IncorrectDataRecievedError
 
 
 @log

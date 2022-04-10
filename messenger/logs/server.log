@@ -1,0 +1,10 @@
+2022-04-10 19:17:47,503 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:17:47,530 INFO server.py Server started. :7777
+2022-04-10 19:24:38,929 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:24:38,953 INFO server.py Server started. :7777
+2022-04-10 19:27:42,559 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:28:00,080 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:32:07,135 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:34:34,021 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:34:54,671 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
+2022-04-10 19:35:16,964 DEBUG decos.py Fucn: args_parser | Params: ('7777', ''), {} | Module: __main__
