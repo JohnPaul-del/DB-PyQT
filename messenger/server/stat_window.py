@@ -1,9 +1,13 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QTableView
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QDialog, QPushButton, QTableView
 
 
 class StatWindow(QDialog):
+    """
+    GUI for show session statistics for users
+    """
+
     def __init__(self, database):
         super().__init__()
 

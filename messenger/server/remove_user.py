@@ -1,9 +1,12 @@
-from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QPushButton, QApplication
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QPushButton
 
 
 class DelUserDialog(QDialog):
+    """
+    GUI for removing users from database
+    """
+
     def __init__(self, database, server):
         super().__init__()
         self.database = database

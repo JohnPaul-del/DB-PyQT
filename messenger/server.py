@@ -2,15 +2,13 @@ import argparse
 import configparser
 import os.path
 
-from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 
 from common.utils import *
-from common.decos import log
 from server.core import MessageProcessor
-from server.database import  ServerStorage
+from server.database import ServerStorage
 from server.main_window import MainWindow
-
 
 logger = logging.getLogger('server')
 

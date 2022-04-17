@@ -2,9 +2,10 @@ import sys
 import unittest
 from time import time
 
+from common.errors import ReqFieldMissingError, ServerError
 from ..client import create_presence, process_response_answer
 from ..common.variables import *
-from common.errors import ReqFieldMissingError, ServerError
+
 sys.path.append('../')
 
 

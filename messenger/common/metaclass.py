@@ -1,5 +1,6 @@
 import dis
 
+
 class ServerMaker(type):
     def __init__(self, class_name, bases, class_dict):
         methods = []

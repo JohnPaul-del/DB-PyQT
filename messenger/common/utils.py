@@ -1,5 +1,6 @@
 import json
 import sys
+
 sys.path.append("..")
 
 from messenger.common.variables import *

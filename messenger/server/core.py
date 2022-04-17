@@ -1,21 +1,24 @@
-import threading
-import logging
+import binascii
+import hmac
+import json
+import os
 import select
 import socket
-import json
-import hmac
-import binascii
-import os
-from messenger.common.metaclass import ServerMaker
-from messenger.common.main_descriptors import Port
-from messenger.common.variables import *
-from messenger.common.utils import send_message, get_message
-from messenger.common.decos import login_required
+import threading
+
+from common.decos import login_required
+from common.main_descriptors import Port
+from common.utils import send_message, get_message
+from common.variables import *
 
 logger = logging.getLogger('server')
 
 
 class MessageProcessor(threading.Thread):
+    """
+    Creating a new connection with client. Also responsible for send and receive messages between clients
+    """
+
     port = Port()
 
     def __init__(self, listen_address, listen_port, database):
@@ -254,7 +257,7 @@ class MessageProcessor(threading.Thread):
                 sock.close()
 
     def service_update_lists(self):
-       for client in self.names:
+        for client in self.names:
             try:
                 send_message(self.names[client], RESPONSE_205)
             except OSError:

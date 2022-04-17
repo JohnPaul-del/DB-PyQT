@@ -1,15 +1,18 @@
-import sys
 import logging
+import sys
 
 sys.path.append('../')
 from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 logger = logging.getLogger('client')
 
 
 class AddContactDialog(QDialog):
+    """
+    Class AddContactDialog - GUI for adding new contact in contact list
+    """
+
     def __init__(self, transport, database):
         super().__init__()
         self.transport = transport

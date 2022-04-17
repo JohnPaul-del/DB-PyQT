@@ -1,5 +1,5 @@
 import logging
-import  sys
+import sys
 
 logger = logging.getLogger('server')
 
@@ -10,6 +10,10 @@ else:
 
 
 class Port:
+    """
+    Class Port - Generate port for connection
+    """
+
     def __set__(self, instance, value):
         if not 1023 < value < 65536:
             logger.critical(f'Invalid port value: {value}.'

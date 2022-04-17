@@ -1,14 +1,14 @@
 import argparse
+
 from PyQt5.QtWidgets import QApplication
 
-from common.utils import *
-from common.variables import *
-from common.errors import ServerError
-from common.decos import log
 from client.database import ClientDatabase
-from client.transport import ClientTransport
 from client.main_window import ClientMainWindow
 from client.start_dialog import UserNameDialog
+from client.transport import ClientTransport
+from common.errors import ServerError
+from common.utils import *
+from common.variables import *
 
 logger = logging.getLogger('client')
 
@@ -63,5 +63,3 @@ if __name__ == '__main__':
 
     transport.transport_shutdown()
     transport.join()
-
-

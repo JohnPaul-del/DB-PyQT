@@ -1,21 +1,24 @@
 import socket
 import sys
-import time
-import logging
-import json
 import threading
+import time
+
 from PyQt5.QtCore import pyqtSignal, QObject
 
 sys.path.append('../')
-from messenger.common.utils import *
-from messenger.common.variables import *
-from messenger.common.errors import ServerError
+from common.utils import *
+from common.variables import *
+from common.errors import ServerError
 
 logger = logging.getLogger('client')
 socket_lock = threading.Lock()
 
 
 class ClientTransport(threading.Thread, QObject):
+    """
+    Class ClientTransport is main class for work client-side part of app
+    """
+
     new_message = pyqtSignal(str)
     connection_lost = pyqtSignal()
 
@@ -99,9 +102,8 @@ class ClientTransport(threading.Thread, QObject):
         elif ACTION in message and message[ACTION] == MESSAGE and SENDER in message and DESTINATION in message \
                 and MESSAGE_TEXT in message and message[DESTINATION] == self.username:
             logger.debug(f'Message {message[SENDER]}:{message[MESSAGE_TEXT]} has been received')
-            self.database.save_message(message[SENDER] , 'in' , message[MESSAGE_TEXT])
+            self.database.save_message(message[SENDER], 'in', message[MESSAGE_TEXT])
             self.new_message.emit(message[SENDER])
-
 
     def contacts_list_update(self):
         logger.debug(f'Contact list update {self.name}')

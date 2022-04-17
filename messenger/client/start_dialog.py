@@ -1,8 +1,11 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel , qApp
-from PyQt5.QtCore import QEvent
+from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel, qApp
 
 
 class UserNameDialog(QDialog):
+    """
+    Class UserNameDialog - GUI for starting dialog with somebody, who is in contact list
+    """
+
     def __init__(self):
         super().__init__()
 

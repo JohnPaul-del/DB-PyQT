@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="Docutils 0.17.1: http://docutils.sourceforge.net/" name="generator"/>
+
+    <title>Common package &#8212; Messenger 0.1 documentation</title>
+    <link href="_static/pygments.css" rel="stylesheet" type="text/css"/>
+    <link href="_static/alabaster.css" rel="stylesheet" type="text/css"/>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link href="genindex.html" rel="index" title="Index"/>
+    <link href="search.html" rel="search" title="Search"/>
+    <link href="index.html" rel="prev" title="Welcome to Messenger’s documentation!"/>
+
+    <link href="_static/custom.css" rel="stylesheet" type="text/css"/>
+
+
+    <meta content="width=device-width, initial-scale=0.9, maximum-scale=0.9" name="viewport"/>
+
+</head>
+<body>
+
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+
+
+            <div class="body" role="main">
+
+                <section id="common-package">
+                    <h1>Common package<a class="headerlink" href="#common-package"
+                                         title="Permalink to this headline">¶</a></h1>
+                    <p>Пакет общих утилит, использующихся в разных модулях проекта.</p>
+                    <section id="module-common.decos">
+                        <span id="decos-py"></span>
+                        <h2>Скрипт decos.py<a class="headerlink" href="#module-common.decos"
+                                              title="Permalink to this headline">¶</a></h2>
+                        <dl class="py function">
+                            <dt class="sig sig-object py" id="common.decos.log">
+                                <span class="sig-prename descclassname"><span
+                                        class="pre">common.decos.</span></span><span class="sig-name descname"><span
+                                    class="pre">log</span></span><span class="sig-paren">(</span><em
+                                    class="sig-param"><span class="n"><span
+                                    class="pre">write_to_log</span></span></em><span class="sig-paren">)</span><a
+                                    class="headerlink" href="#common.decos.log"
+                                    title="Permalink to this definition">¶</a></dt>
+                            <dd><p>Writing events to log
+                                :param write_to_log: Func
+                                :return: Message object</p>
+                            </dd>
+                        </dl>
+
+                        <dl class="py function">
+                            <dt class="sig sig-object py" id="common.decos.login_required">
+                                <span class="sig-prename descclassname"><span
+                                        class="pre">common.decos.</span></span><span class="sig-name descname"><span
+                                    class="pre">login_required</span></span><span class="sig-paren">(</span><em
+                                    class="sig-param"><span class="n"><span class="pre">func</span></span></em><span
+                                    class="sig-paren">)</span><a class="headerlink" href="#common.decos.login_required"
+                                                                 title="Permalink to this definition">¶</a></dt>
+                            <dd><p>Checked user login for work in messenger
+                                :param func: Func
+                                :return: Boolean</p>
+                            </dd>
+                        </dl>
+
+                    </section>
+                    <section id="main-descriptors-py">
+                        <h2>Скрипт main_descriptors.py<a class="headerlink" href="#main-descriptors-py"
+                                                         title="Permalink to this headline">¶</a></h2>
+                        <dl class="py class">
+                            <dt class="sig sig-object py" id="common.main_descriptors.Port">
+                                <em class="property"><span class="pre">class</span><span class="w"> </span></em><span
+                                    class="sig-prename descclassname"><span class="pre">common.main_descriptors.</span></span><span
+                                    class="sig-name descname"><span class="pre">Port</span></span><a class="headerlink"
+                                                                                                     href="#common.main_descriptors.Port"
+                                                                                                     title="Permalink to this definition">¶</a>
+                            </dt>
+                            <dd><p>Class Port - Generate port for connection</p>
+                            </dd>
+                        </dl>
+
+                    </section>
+                    <section id="errors-py">
+                        <h2>Скрипт errors.py<a class="headerlink" href="#errors-py"
+                                               title="Permalink to this headline">¶</a></h2>
+                        <dl class="py class">
+                            <dt class="sig sig-object py" id="common.errors.ServerError">
+                                <em class="property"><span class="pre">class</span><span class="w"> </span></em><span
+                                    class="sig-prename descclassname"><span
+                                    class="pre">common.errors.</span></span><span class="sig-name descname"><span
+                                    class="pre">ServerError</span></span><span class="sig-paren">(</span><em
+                                    class="sig-param"><span class="n"><span class="pre">text</span></span></em><span
+                                    class="sig-paren">)</span><a class="headerlink" href="#common.errors.ServerError"
+                                                                 title="Permalink to this definition">¶</a></dt>
+                            <dd><p>Class Server Error - Some server error</p>
+                            </dd>
+                        </dl>
+
+                    </section>
+                    <section id="metaclass-py">
+                        <h2>Скрипт metaclass.py<a class="headerlink" href="#metaclass-py"
+                                                  title="Permalink to this headline">¶</a></h2>
+                        <dl class="py class">
+                            <dt class="sig sig-object py" id="common.metaclass.ServerMaker">
+                                <em class="property"><span class="pre">class</span><span class="w"> </span></em><span
+                                    class="sig-prename descclassname"><span
+                                    class="pre">common.metaclass.</span></span><span class="sig-name descname"><span
+                                    class="pre">ServerMaker</span></span><span class="sig-paren">(</span><em
+                                    class="sig-param"><span class="n"><span class="pre">class_name</span></span></em>,
+                                <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em
+                                    class="sig-param"><span class="n"><span
+                                    class="pre">class_dict</span></span></em><span class="sig-paren">)</span><a
+                                    class="headerlink" href="#common.metaclass.ServerMaker"
+                                    title="Permalink to this definition">¶</a></dt>
+                            <dd></dd>
+                        </dl>
+
+                        <dl class="py class">
+                            <dt class="sig sig-object py" id="common.metaclass.ClientMaker">
+                                <em class="property"><span class="pre">class</span><span class="w"> </span></em><span
+                                    class="sig-prename descclassname"><span
+                                    class="pre">common.metaclass.</span></span><span class="sig-name descname"><span
+                                    class="pre">ClientMaker</span></span><span class="sig-paren">(</span><em
+                                    class="sig-param"><span class="n"><span class="pre">class_name</span></span></em>,
+                                <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em
+                                    class="sig-param"><span class="n"><span
+                                    class="pre">class_dict</span></span></em><span class="sig-paren">)</span><a
+                                    class="headerlink" href="#common.metaclass.ClientMaker"
+                                    title="Permalink to this definition">¶</a></dt>
+                            <dd></dd>
+                        </dl>
+
+                    </section>
+                    <section id="utils-py">
+                        <h2>Скрипт utils.py<a class="headerlink" href="#utils-py"
+                                              title="Permalink to this headline">¶</a></h2>
+                        <p>common.utils. <strong>get_message</strong> (client)</p>
+                        <blockquote>
+                            <div><p>Функция приёма сообщений от удалённых компьютеров. Принимает сообщения JSON,
+                                декодирует полученное сообщение и проверяет что получен словарь.</p>
+                            </div>
+                        </blockquote>
+                        <p>common.utils. <strong>send_message</strong> (sock, message)</p>
+                        <blockquote>
+                            <div><p>Функция отправки словарей через сокет. Кодирует словарь в формат JSON и отправляет
+                                через сокет.</p>
+                            </div>
+                        </blockquote>
+                    </section>
+                    <section id="variables-py">
+                        <h2>Скрипт variables.py<a class="headerlink" href="#variables-py"
+                                                  title="Permalink to this headline">¶</a></h2>
+                        <p>Содержит разные глобальные переменные проекта.</p>
+                    </section>
+                </section>
+
+
+            </div>
+
+        </div>
+    </div>
+    <div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+        <div class="sphinxsidebarwrapper">
+            <h1 class="logo"><a href="index.html">Messenger</a></h1>
+
+
+            <h3>Navigation</h3>
+            <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+            <ul class="current">
+                <li class="toctree-l1 current"><a class="current reference internal" href="#">Common package</a>
+                    <ul>
+                        <li class="toctree-l2"><a class="reference internal" href="#module-common.decos">Скрипт
+                            decos.py</a></li>
+                        <li class="toctree-l2"><a class="reference internal" href="#main-descriptors-py">Скрипт
+                            main_descriptors.py</a></li>
+                        <li class="toctree-l2"><a class="reference internal" href="#errors-py">Скрипт errors.py</a></li>
+                        <li class="toctree-l2"><a class="reference internal" href="#metaclass-py">Скрипт
+                            metaclass.py</a></li>
+                        <li class="toctree-l2"><a class="reference internal" href="#utils-py">Скрипт utils.py</a></li>
+                        <li class="toctree-l2"><a class="reference internal" href="#variables-py">Скрипт
+                            variables.py</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="relations">
+                <h3>Related Topics</h3>
+                <ul>
+                    <li><a href="index.html">Documentation overview</a>
+                        <ul>
+                            <li>Previous: <a href="index.html" title="previous chapter">Welcome to Messenger’s
+                                documentation!</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div id="searchbox" role="search" style="display: none">
+                <h3 id="searchlabel">Quick search</h3>
+                <div class="searchformwrapper">
+                    <form action="search.html" class="search" method="get">
+                        <input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q"
+                               spellcheck="false" type="text"/>
+                        <input type="submit" value="Go"/>
+                    </form>
+                </div>
+            </div>
+            <script>$('#searchbox').show(0);</script>
+
+
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="footer">
+    &copy;2022, JohnPaul.
+
+    |
+    Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+    &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+
+    |
+    <a href="_sources/common.rst.txt"
+       rel="nofollow">Page source</a>
+</div>
+
+
+</body>
+</html>

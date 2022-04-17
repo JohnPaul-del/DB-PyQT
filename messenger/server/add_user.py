@@ -1,12 +1,14 @@
-import hashlib
 import binascii
+import hashlib
 
-from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel, QMessageBox
 from PyQt5.QtCore import Qt
-
+from PyQt5.QtWidgets import QDialog, QPushButton, QLineEdit, QApplication, QLabel, QMessageBox
 
 
 class RegisterUser(QDialog):
+    """
+    GUI responsible for registering a users
+    """
 
     def __init__(self, database, server):
         super().__init__()

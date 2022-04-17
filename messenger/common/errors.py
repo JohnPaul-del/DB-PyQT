@@ -1,14 +1,26 @@
 class IncorrectDataRecievedError(Exception):
+    """
+    Class error - Incorrect received data
+    """
+
     def __str__(self):
         return 'Incorrect data received error'
 
 
 class NonDictInpuErrorError(Exception):
+    """
+    Class error - Error dictionary
+    """
+
     def __str__(self):
-        return 'Non-dictionary inpu error'
+        return 'Non-dictionary input error'
 
 
 class ServerError(Exception):
+    """
+    Class Server Error - Some server error
+    """
+
     def __init__(self, text):
         self.text = text
 
@@ -17,6 +29,10 @@ class ServerError(Exception):
 
 
 class ReqFieldMissingError(Exception):
+    """
+    Class File error - File field missing
+    """
+
     def __init__(self, missing_field):
         self.missing_field = missing_field
 

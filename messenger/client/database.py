@@ -1,15 +1,18 @@
+import datetime
 import os
 import sys
-import datetime
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
-from sqlalchemy.orm import  mapper, sessionmaker
+from sqlalchemy.orm import mapper, sessionmaker
 
 sys.path.append('../')
-from messenger.common.variables import *
 
 
 class ClientDatabase:
+    """
+    Class Client database - Needs to save information about clients activity
+    """
+
     class KnownUsers:
         def __init__(self, user):
             self.id = None

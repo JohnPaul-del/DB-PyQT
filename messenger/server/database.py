@@ -1,9 +1,14 @@
+import datetime
+
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, DateTime, Text
 from sqlalchemy.orm import mapper, sessionmaker
-import datetime
 
 
 class ServerStorage:
+    """
+    Storage in server-side for all clients activity
+    """
+
     class AllUsers:
 
         def __init__(self, username, passwd_hash):
@@ -69,8 +74,8 @@ class ServerStorage:
                 'id', Integer, primary_key=True), Column(
                 'user', ForeignKey('Users.id'), unique=True), Column(
                 'ip_address', String), Column(
-                    'port', Integer), Column(
-                        'login_time', DateTime))
+                'port', Integer), Column(
+                'login_time', DateTime))
 
         user_login_history = Table('Login_history', self.metadata,
                                    Column('id', Integer, primary_key=True),
@@ -195,8 +200,8 @@ class ServerStorage:
 
         if not contact or self.session.query(
                 self.UsersContacts).filter_by(
-                user=user.id,
-                contact=contact.id).count():
+            user=user.id,
+            contact=contact.id).count():
             return
 
         contact_row = self.UsersContacts(user.id, contact.id)

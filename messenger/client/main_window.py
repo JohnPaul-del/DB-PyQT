@@ -1,27 +1,29 @@
-import sys
-import logging
-import json
-import logging
 import base64
+import json
+import sys
 
 from Cryptodome.Cipher import PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
-from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QBrush, QColor
-from PyQt5.QtCore import pyqtSlot, QEvent, Qt
+from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox
 
 sys.path.append('../')
 
 from client.main_window_conv import Ui_MainClientWindow
 from client.add_contact import AddContactDialog
 from client.del_contact import DelContactDialog
-from messenger.common.errors import ServerError
-from messenger.common.variables import *
+from common.errors import ServerError
+from common.variables import *
 
 logger = logging.getLogger('client')
 
 
 class ClientMainWindow(QMainWindow):
+    """
+    Class ClientMainWindow - create a client-side window in GUI
+    """
+
     def __init__(self, database, transport):
         super().__init__()
         self.database = database
@@ -232,7 +234,7 @@ class ClientMainWindow(QMainWindow):
             self.history_list_update()
         else:
             if self.database.check_contact(sender):
-               if self.messages.question(
+                if self.messages.question(
                         self,
                         'New message',
                         f'New message from {sender}, Open the chat?',
