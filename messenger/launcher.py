@@ -11,30 +11,14 @@ while True:
     if action == 'q':
         break
     elif action == 's':
-        process.append(
-            subprocess.Popen(
-                'python3 server.py',
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-        )
-        process.append(
-            subprocess.Popen(
-                'python3 client.py -n test1',
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-        )
-        process.append(
-            subprocess.Popen(
-                'python3 client.py -n test2',
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-        )
-        process.append(
-            subprocess.Popen(
-                'python3 client.py -n test3',
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-        )
+        process.append(subprocess.Popen('python3 server.py',
+                                        creationflags=subprocess.CREATE_NEW_CONSOLE,
+                                        ))
+    elif action == 'k':
+        clients_count = int(input(f'Enter client count for start:'))
+        for i in range(clients_count):
+            process.append(subprocess.Popen(f'python3 client.py -n test{i + 1}',
+                                 creationflags=subprocess.CREATE_NEW_CONSOLE))
     elif action == 'x':
         while process:
             victim = process.pop()

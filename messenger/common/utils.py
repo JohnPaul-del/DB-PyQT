@@ -2,9 +2,9 @@ import json
 import sys
 sys.path.append("..")
 
-from .variables import *
-from messenger.errors import IncorrectDataRecievedError, NonDictInpuErrorError
-from messenger.decos import log
+from messenger.common.variables import *
+from errors import IncorrectDataRecievedError, NonDictInpuErrorError
+from decos import log
 
 
 @log

@@ -1,8 +1,5 @@
-import sys
 import unittest
 from time import time
-from ..errors import NonDictInpuErrorError
-from ..common.variables import *
 from ..common.utils import *
 
 sys.path.append('..')

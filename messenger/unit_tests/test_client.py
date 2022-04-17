@@ -4,7 +4,7 @@ from time import time
 
 from ..client import create_presence, process_response_answer
 from ..common.variables import *
-from ..errors import ReqFieldMissingError, ServerError
+from common.errors import ReqFieldMissingError, ServerError
 sys.path.append('../')
 
 

@@ -9,7 +9,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from common.utils import *
-from decos import log
+from common.decos import log
 from main_descriptors import Port
 from metaclass import ServerMaker
 from server_db import ServerStorage
