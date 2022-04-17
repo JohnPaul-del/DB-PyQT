@@ -114,4 +114,3 @@ class ClientDatabase:
         query = self.session.query(self.MessageHistory).filter_by(contact=contact)
         return [(history_row.contact, history_row.direction, history_row.message, history_row.date)
                 for history_row in query.all()]
-

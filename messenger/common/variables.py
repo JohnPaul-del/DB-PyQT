@@ -9,7 +9,6 @@ ENCODING = 'utf-8'
 LOGGING_LEVEL = logging.DEBUG
 
 # DB
-SERVER_DATABASE = 'sqlite:///server_base.db3'
 SERVER_CONFIG = 'server.ini'
 
 # JIM
@@ -19,6 +18,8 @@ USER = 'user'
 ACCOUNT_NAME = 'account_name'
 SENDER = 'from'
 DESTINATION = 'to'
+DATA = 'bin'
+PUBLIC_KEY = 'pubkey'
 
 # Other variables
 PRESENCE = 'presence'
@@ -32,6 +33,7 @@ LIST_INFO = 'data_list'
 REMOVE_CONTACT = 'remove'
 ADD_CONTACT = 'add'
 USERS_REQUEST = 'get_users'
+PUBLIC_KEY_REQUEST = 'pubkey_need'
 
 # Requests
 RESPONSE_200 = {
@@ -44,4 +46,13 @@ RESPONSE_202 = {
 RESPONSE_400 = {
     RESPONSE: 400,
     ERROR: None,
+}
+
+RESPONSE_205 = {
+    RESPONSE: 205,
+}
+
+RESPONSE_511 = {
+    RESPONSE: 511,
+    DATA: None,
 }

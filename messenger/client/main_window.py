@@ -1,6 +1,11 @@
 import sys
 import logging
+import json
+import logging
+import base64
 
+from Cryptodome.Cipher import PKCS1_OAEP
+from Cryptodome.PublicKey import RSA
 from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QBrush, QColor
 from PyQt5.QtCore import pyqtSlot, QEvent, Qt
@@ -11,6 +16,7 @@ from client.main_window_conv import Ui_MainClientWindow
 from client.add_contact import AddContactDialog
 from client.del_contact import DelContactDialog
 from messenger.common.errors import ServerError
+from messenger.common.variables import *
 
 logger = logging.getLogger('client')
 
@@ -93,7 +99,25 @@ class ClientMainWindow(QMainWindow):
         self.set_active_user()
 
     def set_active_user(self):
-        self.ui.label_new_message.setText(f'Enter message for {self.current_chat}:')
+        try:
+            self.current_chat_key = self.transport.key_request(
+                self.current_chat)
+            logger.debug(f'Loaded pubkey for {self.current_chat}')
+            if self.current_chat_key:
+                self.encryptor = PKCS1_OAEP.new(
+                    RSA.import_key(self.current_chat_key))
+        except (OSError, json.JSONDecodeError):
+            self.current_chat_key = None
+            self.encryptor = None
+            logger.debug(f'Key error {self.current_chat}')
+
+        if not self.current_chat_key:
+            self.messages.warning(
+                self, 'Error', 'User not have an encrypted key')
+            return
+
+        self.ui.label_new_message.setText(
+            f'Enter message for {self.current_chat}:')
         self.ui.btn_clear.setDisabled(False)
         self.ui.btn_send.setDisabled(False)
         self.ui.text_message.setDisabled(False)
@@ -190,28 +214,46 @@ class ClientMainWindow(QMainWindow):
             self.history_list_update()
 
     @pyqtSlot(str)
-    def message(self, sender):
+    def message(self, message):
+        encrypted_message = base64.b64decode(message[MESSAGE_TEXT])
+        try:
+            decrypted_message = self.decrypter.decrypt(encrypted_message)
+        except (ValueError, TypeError):
+            self.messages.warning(
+                self, 'Error', 'Message decode error')
+            return
+        self.database.save_message(
+            self.current_chat,
+            'in',
+            decrypted_message.decode('utf8'))
+
+        sender = message[SENDER]
         if sender == self.current_chat:
             self.history_list_update()
         else:
             if self.database.check_contact(sender):
-                if self.messages.question(self,
-                                          'New message',
-                                          f'New message from {sender}, open the chat?',
-                                          QMessageBox.Yes,
-                                          QMessageBox.No) == QMessageBox.Yes:
+               if self.messages.question(
+                        self,
+                        'New message',
+                        f'New message from {sender}, Open the chat?',
+                        QMessageBox.Yes,
+                        QMessageBox.No) == QMessageBox.Yes:
                     self.current_chat = sender
                     self.set_active_user()
             else:
                 print('NO')
-                if self.messages.question(self, 'New message',
-                                          f'New message from {sender}.\n '
-                                          f'There isn`t contact in your list\n'
-                                          f'Adding to contact list and start chat?',
-                                          QMessageBox.Yes,
-                                          QMessageBox.No) == QMessageBox.Yes:
+                if self.messages.question(
+                        self,
+                        'New message',
+                        f'New message from {sender}.\n '
+                        f'There insn`t user in your contact list\n '
+                        f'Add to contact list and open chat?',
+                        QMessageBox.Yes,
+                        QMessageBox.No) == QMessageBox.Yes:
                     self.add_contact(sender)
                     self.current_chat = sender
+                    self.database.save_message(
+                        self.current_chat, 'in', decrypted_message.decode('utf8'))
                     self.set_active_user()
 
     @pyqtSlot()
@@ -222,3 +264,14 @@ class ClientMainWindow(QMainWindow):
     def make_connection(self, trans_obj):
         trans_obj.new_message.connect(self.message)
         trans_obj.connection_lost.connect(self.connection_lost)
+
+    def sig_205(self):
+        if self.current_chat and not self.database.check_user(
+                self.current_chat):
+            self.messages.warning(
+                self,
+                'Information',
+                'User has been removed from server')
+            self.set_disabled_input()
+            self.current_chat = None
+        self.clients_list_update()

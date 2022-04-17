@@ -17,7 +17,7 @@ while True:
     elif action == 'k':
         clients_count = int(input(f'Enter client count for start:'))
         for i in range(clients_count):
-            process.append(subprocess.Popen(f'python3 client.py -n test{i + 1}',
+            process.append(subprocess.Popen(f'python3 client.py -n test{i + 1} -p 123456',
                                  creationflags=subprocess.CREATE_NEW_CONSOLE))
     elif action == 'x':
         while process:

@@ -175,7 +175,6 @@ class ClientTransport(threading.Thread, QObject):
         logger.debug('Process is ending')
         time.sleep(0.5)
 
-    # Функция отправки сообщения на сервер
     def send_message(self, to, message):
         message_dict = {
             ACTION: MESSAGE,
@@ -209,7 +208,6 @@ class ClientTransport(threading.Thread, QObject):
                     logger.debug(f'Connection lost')
                     self.running = False
                     self.connection_lost.emit()
-                # Если сообщение получено, то вызываем функцию обработчик:
                 else:
                     logger.debug(f'Message {message} has been received from server')
                     self.process_server_ans(message)
